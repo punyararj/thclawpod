@@ -1,15 +1,15 @@
-# Clawdpod 🦞🎙️
+# Clawdpod
 
-**Talk to your Clawdbot through Apple HomePod.**
+Talk to Clawdbot through Apple HomePod.
 
-Clawdpod bridges Apple HomePod's voice interface to [Clawdbot](https://github.com/clawdbot/clawdbot), letting you have natural conversations with your AI assistant through any HomePod in your home.
+Clawdpod bridges HomePod's voice interface to [Clawdbot](https://github.com/clawdbot/clawdbot), letting you have conversations with your AI assistant through any HomePod in your home.
 
 ## How It Works
 
 ```
 You: "Hey Siri, Call Dobby"
     ↓
-iOS Shortcut activates, listens to your voice
+iOS Shortcut activates, listens
     ↓
 Speech-to-text via Siri
     ↓
@@ -24,18 +24,11 @@ Text-to-speech via Siri
 HomePod speaks the reply
 ```
 
-### Key Features
-
-- **Voice Recognition**: HomePod can identify family members by voice, routing each person to their own conversation context
-- **Conversation Continuity**: Multi-turn conversations within a session
-- **Full Clawdbot Power**: Access to all your Clawdbot tools, memory, and personality
-- **Natural Termination**: Say "goodbye" or "that's all" to end the conversation
-
 ## Requirements
 
 - Apple HomePod (any model)
 - iPhone/iPad for creating the Shortcut
-- Mac/Linux server running [Clawdbot](https://github.com/clawdbot/clawdbot)
+- Server running [Clawdbot](https://github.com/clawdbot/clawdbot)
 - Python 3.11+ with [uv](https://github.com/astral-sh/uv)
 - Network connectivity between HomePod and server
 
@@ -44,11 +37,10 @@ HomePod speaks the reply
 ### 1. Start the Server
 
 ```bash
-# Clone the repo
 git clone https://github.com/yourusername/clawdpod
 cd clawdpod
 
-# Run the server (uv handles dependencies automatically)
+# Run the server (uv handles dependencies)
 uv run clawdpod_server.py
 ```
 
@@ -56,24 +48,22 @@ Server listens on `0.0.0.0:7001` by default.
 
 ### 2. Create the iOS Shortcut
 
-See [SHORTCUT.md](SHORTCUT.md) for step-by-step instructions with screenshots.
+See [SHORTCUT.md](SHORTCUT.md) for step-by-step instructions.
 
-**Quick overview:**
-1. Open Shortcuts app on iPhone
-2. Create new shortcut named "Call Dobby"
-3. Add actions: Dictate → POST to server → Speak response → Loop
-4. Enable for Siri: "Hey Siri, Call Dobby"
+The shortcut:
+1. Greets you ("This is Dobby")
+2. Loops: listens → sends to server → speaks response
+3. Exits when you say "thank you"
 
 ### 3. Test It
 
 ```bash
-# From another terminal
 curl -X POST http://localhost:7001/chat \
   -H "Content-Type: application/json" \
   -d '{"text": "What time is it?", "speaker": "Alexis"}'
 ```
 
-Then try on HomePod: **"Hey Siri, Call Dobby"**
+Then try: "Hey Siri, Call Dobby"
 
 ## Configuration
 
@@ -84,16 +74,14 @@ Environment variables:
 | `CLAWDPOD_HOST` | `0.0.0.0` | Bind address |
 | `CLAWDPOD_PORT` | `7001` | Listen port |
 | `CLAWDPOD_LOG_LEVEL` | `INFO` | Logging level |
-| `CLAWDPOD_API_TOKEN` | (none) | Optional bearer token for auth |
+| `CLAWDPOD_API_TOKEN` | (none) | Optional bearer token |
 | `CLAWDPOD_AGENT` | `main` | Clawdbot agent to use |
 | `CLAWDPOD_TIMEOUT` | `60` | Response timeout (seconds) |
 | `CLAWDPOD_SESSION_PREFIX` | `homepod` | Session ID prefix |
 
 ## API
 
-### `POST /chat`
-
-Send a voice transcription, get a response.
+### POST /chat
 
 **Request:**
 ```json
@@ -106,95 +94,50 @@ Send a voice transcription, get a response.
 **Response:**
 ```json
 {
-  "reply": "It's currently 62°F and partly cloudy in San Francisco.",
+  "reply": "It's currently 62°F and partly cloudy.",
   "end_conversation": false
 }
 ```
 
-The `speaker` field enables per-person conversation contexts. HomePod can recognize household members by voice and the iOS Shortcut can pass this to the server.
+### GET /health
 
-### `GET /health`
-
-Health check (no auth required).
-
-```json
-{"status": "healthy", "service": "clawdpod"}
-```
+Health check, no auth required.
 
 ## Conversation Flow
 
-1. **User initiates**: "Hey Siri, Call Dobby"
-2. **Loop begins**: Shortcut listens, sends to server, speaks response
-3. **Continue or end**: 
-   - Keep talking to continue
-   - Say "goodbye" or "that's all" to end
-   - Or the assistant can end with those phrases
-4. **Shortcut exits** when `end_conversation: true`
+1. "Hey Siri, Call Dobby" — Shortcut starts, greets you
+2. Speak naturally — your input is sent to Clawdbot
+3. Listen to response — Siri speaks Clawdbot's reply
+4. Continue or end — say "thank you" to exit
 
-## Speaker Recognition
+## Security
 
-HomePod can recognize different family members' voices. The iOS Shortcut can access this and pass it to Clawdpod:
-
-- Each speaker gets their own session: `homepod:alexis`, `homepod:odysseus`, etc.
-- Unknown speakers use: `homepod:family`
-- Clawdbot maintains separate context per session
-
-## Security Considerations
-
-- **Network**: Run on a private network or use a VPN
-- **Auth Token**: Set `CLAWDPOD_API_TOKEN` for bearer auth
-- **HTTPS**: Consider a reverse proxy (nginx/caddy) for TLS
-- **Firewall**: Restrict access to trusted IPs
-
-## Architecture
-
-```
-┌──────────────┐     ┌──────────────┐     ┌──────────────┐
-│   HomePod    │────▶│   Clawdpod   │────▶│   Clawdbot   │
-│   (Siri)     │◀────│   (FastAPI)  │◀────│   (Agent)    │
-└──────────────┘     └──────────────┘     └──────────────┘
-     voice              HTTP/JSON           CLI/Session
-     
-- HomePod: Voice I/O via Siri
-- Clawdpod: HTTP bridge, session routing
-- Clawdbot: AI agent with tools, memory, personality
-```
+- Traffic is unencrypted by default
+- Set `CLAWDPOD_API_TOKEN` to require bearer auth
+- Consider a reverse proxy for TLS if exposed beyond your network
 
 ## Limitations
 
-- **Pull-only**: Clawdbot cannot initiate conversations to HomePod
-- **Synchronous**: Request-response only, no streaming
-- **Siri dependency**: STT/TTS quality depends on Siri
-- **Network required**: HomePod must reach the server
+- Pull-only: Clawdbot cannot initiate conversations
+- Synchronous: request-response only, no streaming
+- Siri-dependent: STT/TTS quality depends on Siri
+- Network required: HomePod must reach the server
 
 ## Troubleshooting
 
-**"Server not responding"**
-- Check server is running: `curl http://your-server:7001/health`
-- Verify network connectivity from iPhone to server
+**Server not responding**
+- Check server is running: `curl http://server:7001/health`
+- Verify network connectivity
 - Check firewall rules
 
-**"Clawdbot not found"**
-- Ensure Clawdbot is installed and in PATH
+**Clawdbot not found**
+- Ensure clawdbot is installed and in PATH
 - Check volta/npm-global paths
-
-**"Authentication failed"**
-- Verify `CLAWDPOD_API_TOKEN` matches Shortcut header
 
 **Slow responses**
 - Check Clawdbot gateway status
-- Consider increasing `CLAWDPOD_TIMEOUT`
-- Check network latency
-
-## Contributing
-
-PRs welcome! See [CONTRIBUTING.md](CONTRIBUTING.md).
+- Increase `CLAWDPOD_TIMEOUT`
 
 ## License
 
 MIT
-
-## Credits
-
-- [Clawdbot](https://github.com/clawdbot/clawdbot) - The AI agent platform
-- Inspired by the desire to talk to AI assistants naturally at home

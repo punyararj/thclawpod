@@ -1,194 +1,82 @@
-# iOS Shortcut Setup Guide
+# iOS Shortcut Setup
 
-This guide walks you through creating the iOS Shortcut that bridges HomePod to Clawdpod.
+Create the iOS Shortcut that connects HomePod to Clawdpod.
 
 ## Prerequisites
 
 - iPhone or iPad with iOS 16+
-- Shortcuts app installed
-- Clawdpod server running and accessible from your network
+- Shortcuts app
+- Clawdpod server running and reachable
 
-## Overview
+## Current Shortcut
 
-The Shortcut does this loop:
-1. Listen for voice input (Dictate Text)
-2. Send transcription to Clawdpod server
-3. Speak the response
-4. Check if conversation should end
-5. If not, go back to step 1
+The shortcut loops up to 50 times:
 
-## Step-by-Step Setup
+1. Ask for input ("Go on?")
+2. If input begins with "thank you" → say goodbye and exit
+3. Otherwise → POST to server, speak the reply
+4. Repeat
 
-### Step 1: Create New Shortcut
+## Step-by-Step
 
-1. Open **Shortcuts** app
-2. Tap **+** to create new shortcut
-3. Tap the name at top and rename to **"Call Dobby"** (or your assistant's name)
+### 1. Create New Shortcut
 
-### Step 2: Set Variables
+Open Shortcuts → tap + → name it "Call Dobby"
 
-Add these actions at the start:
+### 2. Set Server URL
 
-**Text** action:
-- Content: `http://YOUR-SERVER-IP:7001` (your Clawdpod server URL)
-- Tap the text, then "Set Variable" → name it `ServerURL`
+- Add **Text** action: `http://YOUR-SERVER:7001`
+- Add **Set Variable** action: name it `chat_server`
 
-**Text** action:
-- Content: Your name (e.g., `Alexis`) — or use "Get Current User" if available
-- Set Variable → name it `Speaker`
+### 3. Greeting
 
-### Step 3: Conversation Loop
+- Add **Speak Text** action: "This is Dobby"
 
-**Repeat** action (set to repeat many times, e.g., 100):
+### 4. Conversation Loop
 
-Inside the repeat block, add:
+Add **Repeat** action, set to 50 times.
 
-#### 3a. Get Voice Input
+Inside the loop:
 
-**Dictate Text** action:
-- Stop Listening: After Short Pause
-- Set the result to variable `UserInput`
+**a. Get Input**
+- Add **Ask for Input** action
+- Prompt: "Go on?"
 
-#### 3b. Send to Server
+**b. Check for Exit**
+- Add **If** action
+- Condition: Provided Input begins with "thank you"
+- Inside If: **Speak Text** "Goodbye", then **Stop This Shortcut**
 
-**Get Contents of URL** action:
-- URL: `ServerURL` variable + `/chat`
-  - Tap URL field, insert `ServerURL` variable, then type `/chat`
+**c. Send to Server (in Otherwise block)**
+- Add **Get Contents of URL**
+- URL: `chat_server` variable + `/chat`
 - Method: POST
-- Headers:
-  - `Content-Type`: `application/json`
-  - (Optional) `Authorization`: `Bearer YOUR-TOKEN` if using auth
-- Request Body: JSON
-  ```json
-  {
-    "text": [UserInput variable],
-    "speaker": [Speaker variable]
-  }
-  ```
-  - Tap "Add new field" → Text → key: `text` → value: `UserInput` variable
-  - Tap "Add new field" → Text → key: `speaker` → value: `Speaker` variable
+- Headers: Content-Type: application/json
+- Body: JSON with fields:
+  - `text`: Provided Input
+  - `speaker`: "YourName"
 
-#### 3c. Parse Response
+**d. Speak Response**
+- Add **Get Dictionary Value**: key `reply`
+- Add **Speak Text**: Dictionary Value
 
-**Get Dictionary Value** action:
-- Get: Value for `reply`
-- From: Contents of URL (previous action)
-- Set Variable → `Reply`
+### 5. Enable for Siri
 
-**Get Dictionary Value** action:
-- Get: Value for `end_conversation`
-- From: Contents of URL
-- Set Variable → `EndConversation`
+Tap shortcut name → Add to Siri → record "Call Dobby"
 
-#### 3d. Speak Response
+### 6. HomePod Setup
 
-**Speak Text** action:
-- Text: `Reply` variable
+For HomePod to run personal shortcuts:
+1. Open Home app → HomePod settings
+2. Enable Personal Requests
+3. Set your account as Primary User
 
-#### 3e. Check for End
+## Testing
 
-**If** action:
-- Input: `EndConversation`
-- Condition: is `true` (or equals 1)
+1. Run shortcut manually on iPhone first
+2. Verify server receives requests and responds
+3. Then test via "Hey Siri, Call Dobby" on HomePod
 
-Inside the If:
-- **Exit Shortcut** action
+## Screenshot
 
-(End If)
-
-### Step 4: Enable for Siri
-
-1. Tap the **ⓘ** (info) button at bottom of shortcut
-2. Tap **Add to Siri**
-3. Record or type: "Call Dobby"
-4. Tap **Done**
-
-### Step 5: Test
-
-**On iPhone:**
-1. Say "Hey Siri, Call Dobby"
-2. When prompted, say something
-3. Listen for response
-4. Say "goodbye" to end
-
-**On HomePod:**
-1. Say "Hey Siri, Call Dobby"
-2. The shortcut runs on your iPhone but audio routes to HomePod
-
-## Advanced: Voice Recognition
-
-HomePod can recognize different household members. To pass this to Clawdpod:
-
-### Option A: Manual Speaker Selection
-
-Add a **Choose from Menu** action at the start:
-- Options: Alexis, Ringae, Odysseus, Kallisto, Guest
-- Set selection to `Speaker` variable
-
-### Option B: Use Current User (if available)
-
-Some Shortcuts contexts provide the current user. Check if "Get Current User" action is available and returns the recognized person.
-
-## Tips
-
-### Smart Apostrophes
-
-iOS uses "smart" curly apostrophes. The phrase "that's all" might become "that's all". Clawdpod handles both, but be aware when debugging.
-
-### Timeout Handling
-
-If the server takes too long, the Shortcut may error. The default 60-second timeout should be sufficient, but you can add error handling:
-
-**Get Contents of URL** → tap ⓧ → "Continue on Error"
-
-Then add an **If** to check if the result is valid.
-
-### Personal Requests
-
-For HomePod to run Shortcuts, you may need to enable "Personal Requests":
-1. Open **Home** app
-2. Tap your HomePod
-3. Scroll to **Personal Requests** → Enable
-
-This routes Shortcut execution to your paired iPhone.
-
-### Testing Without HomePod
-
-Test the Shortcut directly on iPhone first. Tap the play button in Shortcuts to run it locally before trying on HomePod.
-
-## Example Conversation
-
-```
-You: "Hey Siri, Call Dobby"
-Siri: [activates shortcut, starts listening]
-You: "What's on my calendar today?"
-Dobby: "You have a dentist appointment at 2pm and dinner with friends at 7."
-You: "Remind me to bring the wine"
-Dobby: "I've set a reminder for 6:30pm to bring wine for dinner."
-You: "Thanks, that's all"
-Dobby: "Goodbye! Talk to you later."
-[Shortcut ends]
-```
-
-## Troubleshooting
-
-**"Sorry, I can't do that"**
-- Check HomePod Personal Requests are enabled
-- Ensure iPhone is on same network as HomePod
-
-**No response / timeout**
-- Verify server is reachable: `curl http://server:7001/health`
-- Check server logs for errors
-
-**"The server returned an error"**
-- Check Clawdpod logs
-- Verify JSON formatting in Shortcut
-- Test with curl first
-
-**Shortcut doesn't appear on HomePod**
-- Re-add Siri phrase
-- Check Shortcut sharing settings
-
-## Screenshots
-
-_TODO: Add annotated screenshots of each step_
+![Shortcut](screenshot_shortcut.png)
