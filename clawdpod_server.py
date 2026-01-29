@@ -183,8 +183,10 @@ async def call_clawdbot(message: str, session_id: str, speaker: str) -> str:
             return "Sorry, I'm having trouble connecting right now. Try again in a moment."
         
         # Parse JSON response
+        # clawdbot --json returns: {"result": {"payloads": [{"text": "..."}]}}
         result = json.loads(stdout.decode())
-        reply = result.get("reply") or result.get("response") or result.get("text", "")
+        payloads = result.get("result", {}).get("payloads", [])
+        reply = payloads[0].get("text", "") if payloads else ""
         
         if not reply:
             logger.warning(f"Empty reply from clawdbot: {result}")
