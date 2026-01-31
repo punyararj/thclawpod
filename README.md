@@ -1,8 +1,8 @@
-# Clawdpod
+# Clawpod
 
 Talk to Clawdbot through Apple HomePod.
 
-Clawdpod bridges HomePod's voice interface to [Clawdbot](https://github.com/clawdbot/clawdbot), letting you have conversations with your AI assistant through any HomePod in your home.
+Clawpod bridges HomePod's voice interface to [Clawdbot](https://github.com/clawdbot/clawdbot), letting you have conversations with your AI assistant through any HomePod in your home.
 
 ## How It Works
 
@@ -13,7 +13,7 @@ iOS Shortcut activates, listens
     ↓
 Speech-to-text via Siri
     ↓
-POST /chat → Clawdpod server
+POST /chat → Clawpod server
     ↓
 clawdbot agent CLI
     ↓
@@ -71,13 +71,13 @@ Environment variables:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `CLAWDPOD_HOST` | `0.0.0.0` | Bind address |
-| `CLAWDPOD_PORT` | `7001` | Listen port |
-| `CLAWDPOD_LOG_LEVEL` | `INFO` | Logging level |
-| `CLAWDPOD_API_TOKEN` | (none) | Optional bearer token |
-| `CLAWDPOD_AGENT` | `main` | Clawdbot agent to use |
-| `CLAWDPOD_TIMEOUT` | `60` | Response timeout (seconds) |
-| `CLAWDPOD_SESSION_PREFIX` | `homepod` | Session ID prefix |
+| `CLAWPOD_HOST` | `0.0.0.0` | Bind address |
+| `CLAWPOD_PORT` | `7001` | Listen port |
+| `CLAWPOD_LOG_LEVEL` | `INFO` | Logging level |
+| `CLAWPOD_API_TOKEN` | (none) | Optional bearer token |
+| `CLAWPOD_AGENT` | `main` | Clawdbot agent to use |
+| `CLAWPOD_TIMEOUT` | `60` | Response timeout (seconds) |
+| `CLAWPOD_SESSION_PREFIX` | `homepod` | Session ID prefix |
 
 ## API
 
@@ -113,7 +113,7 @@ Health check, no auth required.
 ## Security
 
 - Traffic is unencrypted by default
-- Set `CLAWDPOD_API_TOKEN` to require bearer auth
+- Set `CLAWPOD_API_TOKEN` to require bearer auth
 - Consider a reverse proxy for TLS if exposed beyond your network
 
 ## Limitations
@@ -136,7 +136,7 @@ Health check, no auth required.
 
 **Slow responses**
 - Check Clawdbot gateway status
-- Increase `CLAWDPOD_TIMEOUT`
+- Increase `CLAWPOD_TIMEOUT`
 
 ## License
 

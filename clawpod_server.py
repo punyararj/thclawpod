@@ -7,7 +7,7 @@
 # ]
 # ///
 """
-Clawdpod: HomePod ↔ Clawdbot voice bridge.
+Clawpod: HomePod ↔ Clawdbot voice bridge.
 
 A FastAPI server that receives voice transcriptions from an iOS Shortcut
 running on HomePod, routes them to Clawdbot, and returns spoken responses.
@@ -36,17 +36,17 @@ from pydantic import BaseModel
 # Configuration
 # -----------------------------------------------------------------------------
 
-HOST = os.getenv("CLAWDPOD_HOST", "0.0.0.0")
-PORT = int(os.getenv("CLAWDPOD_PORT", "7001"))
-LOG_LEVEL = os.getenv("CLAWDPOD_LOG_LEVEL", "INFO")
-API_TOKEN = os.getenv("CLAWDPOD_API_TOKEN")  # Optional auth
+HOST = os.getenv("CLAWPOD_HOST", "0.0.0.0")
+PORT = int(os.getenv("CLAWPOD_PORT", "7001"))
+LOG_LEVEL = os.getenv("CLAWPOD_LOG_LEVEL", "INFO")
+API_TOKEN = os.getenv("CLAWPOD_API_TOKEN")  # Optional auth
 
 # Clawdbot settings
-CLAWDBOT_AGENT = os.getenv("CLAWDPOD_AGENT", "main")
-CLAWDBOT_TIMEOUT = int(os.getenv("CLAWDPOD_TIMEOUT", "60"))
+CLAWDBOT_AGENT = os.getenv("CLAWPOD_AGENT", "main")
+CLAWDBOT_TIMEOUT = int(os.getenv("CLAWPOD_TIMEOUT", "60"))
 
 # Session prefix for HomePod conversations
-SESSION_PREFIX = os.getenv("CLAWDPOD_SESSION_PREFIX", "homepod")
+SESSION_PREFIX = os.getenv("CLAWPOD_SESSION_PREFIX", "homepod")
 
 # End-of-conversation phrases (either party can say these)
 END_PHRASES = [
@@ -61,7 +61,7 @@ END_PHRASES = [
 logging.basicConfig(level=LOG_LEVEL.upper())
 logger = logging.getLogger("clawpod")
 
-app = FastAPI(title="Clawdpod", version="1.0.0")
+app = FastAPI(title="Clawpod", version="1.0.0")
 
 # -----------------------------------------------------------------------------
 # Models
@@ -264,7 +264,7 @@ async def chat(request: ChatRequest, _: None = Depends(require_auth)):
 if __name__ == "__main__":
     import uvicorn
     
-    logger.info(f"Starting Clawdpod on {HOST}:{PORT}")
+    logger.info(f"Starting Clawpod on {HOST}:{PORT}")
     logger.info(f"Agent: {CLAWDBOT_AGENT}, Session prefix: {SESSION_PREFIX}")
     
     uvicorn.run(app, host=HOST, port=PORT, log_level=LOG_LEVEL.lower())

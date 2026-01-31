@@ -4,7 +4,7 @@
 # dependencies = ["httpx"]
 # ///
 """
-Simple test client for Clawdpod.
+Simple test client for Clawpod.
 
 Usage:
     uv run test_client.py [--server URL] [--speaker NAME]
@@ -14,7 +14,7 @@ import argparse
 import httpx
 
 def main():
-    parser = argparse.ArgumentParser(description="Test Clawdpod server")
+    parser = argparse.ArgumentParser(description="Test Clawpod server")
     parser.add_argument("--server", default="http://localhost:7001", help="Server URL")
     parser.add_argument("--speaker", default="Test", help="Speaker name")
     parser.add_argument("--token", default=None, help="Auth token")
@@ -24,7 +24,7 @@ def main():
     if args.token:
         headers["Authorization"] = f"Bearer {args.token}"
 
-    print(f"🦞 Clawdpod Test Client")
+    print(f"🦞 Clawpod Test Client")
     print(f"   Server: {args.server}")
     print(f"   Speaker: {args.speaker}")
     print(f"   Say 'quit' or 'goodbye' to exit\n")

@@ -1,12 +1,12 @@
 # iOS Shortcut Setup
 
-Create the iOS Shortcut that connects HomePod to Clawdpod.
+Create the iOS Shortcut that connects HomePod to Clawpod.
 
 ## Prerequisites
 
 - iPhone or iPad with iOS 16+
 - Shortcuts app
-- Clawdpod server running and reachable
+- Clawpod server running and reachable
 
 ## Current Shortcut
 
