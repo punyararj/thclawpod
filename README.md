@@ -37,11 +37,11 @@ HomePod speaks the reply
 ### 1. Start the Server
 
 ```bash
-git clone https://github.com/yourusername/clawdpod
-cd clawdpod
+git clone https://github.com/yourusername/clawpod
+cd clawpod
 
 # Run the server (uv handles dependencies)
-uv run clawdpod_server.py
+uv run clawpod_server.py
 ```
 
 Server listens on `0.0.0.0:7001` by default.

@@ -59,7 +59,7 @@ END_PHRASES = [
 
 # Logging
 logging.basicConfig(level=LOG_LEVEL.upper())
-logger = logging.getLogger("clawdpod")
+logger = logging.getLogger("clawpod")
 
 app = FastAPI(title="Clawdpod", version="1.0.0")
 
@@ -218,7 +218,7 @@ def is_end_phrase(text: str) -> bool:
 @app.get("/health")
 async def health():
     """Health check endpoint (no auth required)."""
-    return {"status": "healthy", "service": "clawdpod"}
+    return {"status": "healthy", "service": "clawpod"}
 
 
 @app.post("/chat", response_model=ChatResponse)
