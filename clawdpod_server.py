@@ -242,13 +242,6 @@ async def chat(request: ChatRequest, _: None = Depends(require_auth)):
     
     logger.info(f"Chat request: speaker={speaker} text={text[:50]}...")
     
-    # Check if user wants to end conversation
-    if is_end_phrase(text):
-        return ChatResponse(
-            reply="Goodbye! Talk to you later.",
-            end_conversation=True
-        )
-    
     # Get session and call Clawdbot
     session_id = get_session_id(speaker)
     reply = await call_clawdbot(text, session_id, speaker)
