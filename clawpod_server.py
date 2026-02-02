@@ -130,6 +130,9 @@ def find_openclaw() -> str:
     raise RuntimeError("openclaw not found in volta, npm-global, or PATH")
 
 
+HOMEPOD_STYLE_PREFIX = "[HomePod voice mode; be brief; no emojis] "
+
+
 async def call_openclaw(message: str, session_id: str, speaker: str) -> str:
     """
     Call openclaw agent CLI and return the response.
@@ -144,8 +147,8 @@ async def call_openclaw(message: str, session_id: str, speaker: str) -> str:
     """
     openclaw = find_openclaw()
     
-    # Prepend speaker context to message
-    contextualized_message = f"[HomePod, speaker: {speaker}] {message}"
+    # Prepend voice-mode + speaker context to message
+    contextualized_message = f"{HOMEPOD_STYLE_PREFIX}[speaker: {speaker}] {message}"
     
     cmd = [
         openclaw,
