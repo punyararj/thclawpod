@@ -66,10 +66,18 @@ Tap shortcut name → Add to Siri → record "Call Dobby"
 
 ### 6. HomePod Setup
 
+Apple’s naming has shifted over time; on current iOS/HomePod versions the relevant setting is typically called **Personal Content** (and it works together with **Recognize My Voice**).
+
+Apple Support reference:
+- https://support.apple.com/guide/homepod/set-up-siri-apd1841a8f81/homepod
+
 For HomePod to run personal shortcuts:
-1. Open Home app → HomePod settings
-2. Enable Personal Requests
-3. Set your account as Primary User
+
+1. Open the **Home** app.
+2. Go to **…** → **Home Settings** → **People** → **(your name)**.
+3. Enable **Recognize My Voice**.
+4. Tap **Personal Content**, then enable **Personal Content** for the HomePod(s) you want.
+5. Ensure your account is set as the **Primary User** (if prompted / applicable).
 
 ## Testing
 

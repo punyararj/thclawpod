@@ -14,7 +14,7 @@
 
 ## Documentation
 
-- [ ] Document HomePod voice recognition setup (Personal Requests, family member enrollment)
+- [ ] Document HomePod voice recognition setup (Personal Content / Recognize My Voice, family member enrollment)
 - [ ] Add launchd plist example for macOS users
 
 ## Testing
