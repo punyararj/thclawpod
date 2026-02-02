@@ -16,7 +16,7 @@ Architecture:
     HomePod → "Hey Siri, Call Dobby"
         → iOS Shortcut (STT)
         → POST /chat to this server
-        → clawdbot agent CLI
+        → openclaw agent CLI
         → response spoken aloud (TTS)
 """
 
@@ -110,29 +110,29 @@ def get_session_id(speaker: str) -> str:
     return f"{SESSION_PREFIX}:{speaker_key}"
 
 
-def find_clawdbot() -> str:
-    """Find the clawdbot CLI, preferring volta-managed version."""
+def find_openclaw() -> str:
+    """Find the openclaw CLI, preferring volta-managed version."""
     # Try volta path first
-    volta_path = os.path.expanduser("~/.volta/bin/clawdbot")
+    volta_path = os.path.expanduser("~/.volta/bin/openclaw")
     if os.path.exists(volta_path):
         return volta_path
     
     # Try npm-global
-    npm_path = os.path.expanduser("~/.npm-global/bin/clawdbot")
+    npm_path = os.path.expanduser("~/.npm-global/bin/openclaw")
     if os.path.exists(npm_path):
         return npm_path
     
     # Fall back to PATH
-    path = shutil.which("clawdbot")
+    path = shutil.which("openclaw")
     if path:
         return path
     
-    raise RuntimeError("clawdbot not found in volta, npm-global, or PATH")
+    raise RuntimeError("openclaw not found in volta, npm-global, or PATH")
 
 
-async def call_clawdbot(message: str, session_id: str, speaker: str) -> str:
+async def call_openclaw(message: str, session_id: str, speaker: str) -> str:
     """
-    Call clawdbot agent CLI and return the response.
+    Call openclaw agent CLI and return the response.
     
     Args:
         message: User's transcribed speech
@@ -142,13 +142,13 @@ async def call_clawdbot(message: str, session_id: str, speaker: str) -> str:
     Returns:
         Agent's response text
     """
-    clawdbot = find_clawdbot()
+    openclaw = find_openclaw()
     
     # Prepend speaker context to message
     contextualized_message = f"[HomePod, speaker: {speaker}] {message}"
     
     cmd = [
-        clawdbot,
+        openclaw,
         "agent",
         "--message", contextualized_message,
         "--session-id", session_id,
@@ -157,7 +157,7 @@ async def call_clawdbot(message: str, session_id: str, speaker: str) -> str:
         "--json",
     ]
     
-    logger.info(f"Calling clawdbot: session={session_id} speaker={speaker}")
+    logger.info(f"Calling openclaw: session={session_id} speaker={speaker}")
     logger.debug(f"Command: {' '.join(cmd)}")
     
     # Set up environment with volta
@@ -179,29 +179,29 @@ async def call_clawdbot(message: str, session_id: str, speaker: str) -> str:
         )
         
         if proc.returncode != 0:
-            logger.error(f"clawdbot error (exit {proc.returncode}): {stderr.decode()}")
+            logger.error(f"openclaw error (exit {proc.returncode}): {stderr.decode()}")
             return "Sorry, I'm having trouble connecting right now. Try again in a moment."
         
         # Parse JSON response
-        # clawdbot --json returns: {"result": {"payloads": [{"text": "..."}]}}
+        # openclaw --json returns: {"result": {"payloads": [{"text": "..."}]}}
         result = json.loads(stdout.decode())
         payloads = result.get("result", {}).get("payloads", [])
         reply = payloads[0].get("text", "") if payloads else ""
         
         if not reply:
-            logger.warning(f"Empty reply from clawdbot: {result}")
+            logger.warning(f"Empty reply from openclaw: {result}")
             return "I'm not sure how to respond to that."
             
         return reply.strip()
         
     except asyncio.TimeoutError:
-        logger.error("clawdbot timed out")
+        logger.error("openclaw timed out")
         return "Sorry, that took too long. Try again?"
     except json.JSONDecodeError as e:
-        logger.error(f"Failed to parse clawdbot response: {e}")
+        logger.error(f"Failed to parse openclaw response: {e}")
         return "Sorry, something went wrong."
     except Exception as e:
-        logger.error(f"clawdbot call failed: {e}")
+        logger.error(f"openclaw call failed: {e}")
         return "Sorry, I couldn't process that request."
 
 
@@ -244,7 +244,7 @@ async def chat(request: ChatRequest, _: None = Depends(require_auth)):
     
     # Get session and call Clawdbot
     session_id = get_session_id(speaker)
-    reply = await call_clawdbot(text, session_id, speaker)
+    reply = await call_openclaw(text, session_id, speaker)
     
     # Check if agent wants to end conversation
     end_conversation = is_end_phrase(reply)
