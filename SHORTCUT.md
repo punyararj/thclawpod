@@ -1,90 +1,121 @@
 # iOS Shortcut Setup
 
-Create the iOS Shortcut that connects HomePod to Clawpod.
+Create the iOS Shortcut that connects HomePod to ClawPod.
+
+This doc is written so you can rebuild the Shortcut from scratch. For a fully expanded screenshot of every action (including the HTTP JSON body), see `imageShortcutFull.png`.
 
 ## Prerequisites
 
 - iPhone or iPad with iOS 16+
 - Shortcuts app
-- Clawpod server running and reachable
+- ClawPod server running and reachable
 
-## Current Shortcut
+## Current Shortcut (as shown in `imageShortcutFull.png`)
 
-The shortcut loops up to 50 times:
+Name: **Activate the Kraken**
 
-1. Ask for input ("Go on?")
-2. If input begins with "thank you" → say goodbye and exit
-3. Otherwise → POST to server, speak the reply
-4. Repeat
+High-level behavior:
 
-## Step-by-Step
+1. Set the ClawPod server base URL into a variable (`chat_server`).
+2. Speak a greeting ("This is Kraken").
+3. Repeat (50 times):
+   - Ask for text input (prompt: "Go on?")
+   - POST `{ text, speaker }` to `chat_server + "/chat"`
+   - Extract `reply` from the JSON response
+   - Speak the reply
 
-### 1. Create New Shortcut
+Note: the shortcut uses the server’s `end_conversation` field to stop cleanly. After speaking the `reply`, it extracts `end_conversation` from the JSON response and stops the shortcut when it’s truthy.
 
-Open Shortcuts → tap + → name it "Call Dobby"
+## Step-by-step (rebuild instructions)
 
-### 2. Set Server URL
+### 1) Create the shortcut
 
-- Add **Text** action: `http://YOUR-SERVER:7001`
-- Add **Set Variable** action: name it `chat_server`
+Open Shortcuts → tap **+** → name it something memorable.
 
-### 3. Greeting
+### 2) Set server URL → `chat_server`
 
-- Add **Speak Text** action: "This is Dobby"
+- Add a **Text** action:
+  - `http://YOUR-SERVER:7001`
+- Add **Set Variable**:
+  - Name: `chat_server`
+  - Value: the Text action
 
-### 4. Conversation Loop
+### 3) Greeting
 
-Add **Repeat** action, set to 50 times.
+- Add **Speak Text**:
+  - Text: `This is the Kraken`
+  - Wait Until Finished: on
 
-Inside the loop:
+### 4) Conversation loop
 
-**a. Get Input**
-- Add **Ask for Input** action
-- Prompt: "Go on?"
+Add **Repeat** → `50 times`.
 
-**b. Check for Exit**
-- Add **If** action
-- Condition: Provided Input begins with "thank you"
-- Inside If: **Speak Text** "Goodbye", then **Stop This Shortcut**
+Inside the repeat:
 
-**c. Send to Server (in Otherwise block)**
-- Add **Get Contents of URL**
-- URL: `chat_server` variable + `/chat`
-- Method: POST
-- Headers: Content-Type: application/json
-- Body: JSON with fields:
-  - `text`: Provided Input
-  - `speaker`: "YourName"
+#### a) Ask for input
 
-**d. Speak Response**
-- Add **Get Dictionary Value**: key `reply`
-- Add **Speak Text**: Dictionary Value
+- **Ask for Input**
+  - Type: Text
+  - Prompt: `Go on?`
+  - Allow Multiple Lines: on
 
-### 5. Enable for Siri
+#### b) Send to server
 
-Tap shortcut name → Add to Siri → record "Call Dobby"
+- **Get Contents of URL**
+  - URL: `chat_server` + `/chat`
+  - Method: POST
+  - Request Body: JSON
+    - `text`: Ask for Input
+    - `speaker`: `Alexis` (customize this)
 
-### 6. HomePod Setup
+#### c) Get response and Speak
+
+- **Get Dictionary Value**
+  - Key: `reply`
+  - From: Contents of URL
+- **Speak Text**
+  - Text: Dictionary Value
+  - Wait Until Finished: on
+
+#### d) End conversation when the server says so
+
+- **Get Dictionary Value**
+  - Key: `end_conversation`
+  - From: Contents of URL
+- **If** Dictionary Value is true
+  - **Stop This Shortcut**
+
+### 5) Enable for Siri
+
+Tap shortcut name → **Add to Siri** → record the phrase you want.
+
+### 6) HomePod setup (Personal Content + voice recognition)
 
 Apple’s naming has shifted over time; on current iOS/HomePod versions the relevant setting is typically called **Personal Content** (and it works together with **Recognize My Voice**).
 
 Apple Support reference:
 - https://support.apple.com/guide/homepod/set-up-siri-apd1841a8f81/homepod
 
-For HomePod to run personal shortcuts:
+Quick path:
 
-1. Open the **Home** app.
-2. Go to **…** → **Home Settings** → **People** → **(your name)**.
-3. Enable **Recognize My Voice**.
-4. Tap **Personal Content**, then enable **Personal Content** for the HomePod(s) you want.
-5. Ensure your account is set as the **Primary User** (if prompted / applicable).
+1. Home app → **…** → **Home Settings**
+2. **People** → your name
+3. Enable **Recognize My Voice**
+4. **Personal Content** → enable for the HomePod(s) you want
+
+## Shortcut privacy settings
+
+In the shortcut details screen (ⓘ), check **Privacy** settings:
+
+- Enable **Allow Running When Locked**
+- Enable **Allow this shortcut to access** for your ClawPod server URL
 
 ## Testing
 
-1. Run shortcut manually on iPhone first
-2. Verify server receives requests and responds
-3. Then test via "Hey Siri, Call Dobby" on HomePod
+1. Run the shortcut manually on iPhone first.
+2. Verify server receives requests and responds.
+3. Then test via "Hey Siri, <your shortcut name>" on HomePod.
 
-## Screenshot
+## Reference screenshot
 
-![Shortcut](screenshot_shortcut.png)
+- Full expanded screenshot: `imageShortcutFull.png`
