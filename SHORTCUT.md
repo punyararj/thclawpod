@@ -85,9 +85,16 @@ Inside the repeat:
 - **If** Dictionary Value is true
   - **Stop This Shortcut**
 
-### 5) Enable for Siri
+### 5) Run it with Siri
 
-Tap shortcut name → **Add to Siri** → record the phrase you want.
+Per Apple’s current Shortcuts docs, you can run a shortcut by asking Siri to run it by name.
+
+- Say: **“Hey Siri, <shortcut name>”**
+
+This works from iPhone/iPad, and also from HomePod (assuming your HomePod/iPhone settings allow it).
+
+Apple reference:
+- https://support.apple.com/guide/shortcuts/run-shortcuts-with-siri-apd07c25bb38/ios
 
 ### 6) HomePod setup (Personal Content + voice recognition)
 
