@@ -1,14 +1,14 @@
 # ClawPod
 
-Talk to OpenClaw through Apple HomePod.
+Talk to OpenClaw through Apple HomePod. ClawPod bridges HomePod’s voice interface to [OpenClaw](https://openclaw.ai/), letting you have conversations with your AI assistant through any HomePod in your home.
 
-ClawPod bridges HomePod’s voice interface to [OpenClaw](https://openclaw.ai/), letting you have conversations with your AI assistant through any HomePod in your home.
+To use it, run `uv run clawpod.py` on a machine where you already run `openclaw`. You can test it with `test_client.py`. Import the shortcut file onto your iOS device, to activate it from a HomePod.
 
 ## How It Works
 
 It's got two parts, the ClawPod iOS Shortcut and a ClawPod server.
 
-The HomePod acts as a proxy for the ClawPod iOS Shortcut which runs on your iPhone (via Apple Personal Content). That Shortcut connects via HTTP to the ClawPod server, which in turn is a a voice proxy server for the OpenClaw gateway, to which it connects via the `openclaw` command-line client.
+The HomePod acts as a proxy for the ClawPod iOS Shortcut which runs on your iPhone (via Apple Personal Content). That Shortcut connects via HTTP to the ClawPod server, which in turn is a voice proxy server for the OpenClaw gateway, to which it connects via the `openclaw` command-line client.
 
 
 ```
@@ -64,9 +64,9 @@ You can configure it with the usual environment variables:
 | `CLAWPOD_TIMEOUT`        | `60`      | Response timeout (seconds) |
 | `CLAWPOD_SESSION_PREFIX` | `homepod` | Session ID prefix          |
 
-If you want this server always running, then you'll need to setup a systemd or launchctl service definition. Have a look at the ancestral Homechat repo for an example.
+If you're running it at home, as I do, then the easiest thing is probably to bind to the broadcast address  `0.0.0.0` so your iOS device can reach the server, and to skip authentication. But be careful out there. This can access your agent. So please don't stick this on the public internet unless you know what you are doing, how to use the binding address and the api token to secure it, etc..
 
-And be careful out there. Please don't stick this on the public internet unless you know what you are doing, how to use the binding address and the api token to secure it, etc..
+If you want this server always running, then you'll need to set up a systemd or launchctl service definition. Have a look at the ancestral Homechat repo for an example.
 
 #### Testing the connection to OpenClaw
 
@@ -103,10 +103,6 @@ Once `clawpod` is interacting correctly with your OpenClaw agent, then the next 
 
 For that, you need the ClawPod iOS Shortcut. In the repo, I’ve included a copy of the iOS Shortcut I use, which you can install on your system and then adjust as needed.
 
-Here’s what the Shortcut's action sequence looks like:
-
-<Image src={shortcutDefinitionImg} alt="Screenshot of the ClawPod iOS Shortcut definition" />
-
 In particular, you will want to modify these parts of the Shortcut:
 
 1. **ClawPod URL.** The URL which describes how to reach the ClawPod server within your subnet.
@@ -139,17 +135,6 @@ To summarize:
 3. Under **People**, tap **your name**.
 4. Turn on **Recognize My Voice**.
 5. Tap **Personal Content**, then enable **Personal Content** for the HomePod(s) you want.
-
-Below are screenshots of where these settings live in the Home app:
-
-<div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start; max-width: 720px; margin: 0 auto;">
-  <div style="max-width: 340px; justify-self: center;">
-    <Image src={homePodSettingsImg} alt="Home app: HomePod device settings showing Personal Content / related toggles" />
-  </div>
-  <div style="max-width: 340px; justify-self: center;">
-    <Image src={homeSettingsImg} alt="Home app: Home Settings → People → Personal Content / Recognize My Voice" />
-  </div>
-</div>
 
 Finally, you should be sure that when you configure the iOS Shortcut on your device, it’s configured so that these settings are enabled: “Personal Content” can be activated from HomePod. These are necessary for requests to make their way all the way to the HomePod.
 
@@ -194,6 +179,6 @@ If you invoke from iOS by running the Shortcut manually when the device is unloc
 
 Once that is working, you can now invoke the same flow by launching the Shortcut from your HomePod. Just say “Hey Siri, invoke the Kraken,” and after a pause, you should get a reply from your agent.
 
-Congratulations. You are now using some of oldest voice asssistant technology (Siri on the HomePod) with the most advanced AI, and the most delightfully whacky assistant technology, of the day.
+Congratulations. You are now using some of oldest voice assistant technology (Siri on the HomePod) with the most advanced AI, and the most delightfully whacky assistant technology, of the moment.
 
 

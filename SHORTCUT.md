@@ -2,6 +2,8 @@
 
 Create the iOS Shortcut that connects HomePod to ClawPod.
 
+This Shortcut runs on your iPhone, and HomePod triggers it via Personal Content.
+
 The easiest thing is to import my Shortcut and adjust it. It does the following:
 
 1. Set the ClawPod server base URL into a variable (`chat_server`).
@@ -14,12 +16,16 @@ The easiest thing is to import my Shortcut and adjust it. It does the following:
 
 Note: the shortcut uses the server’s `end_conversation` field to stop cleanly. After speaking the `reply`, it extracts `end_conversation` from the JSON response and stops the shortcut when it’s truthy.
 
-Here are instructions to build it from scratch. For a fully expanded screenshot of every action (including the HTTP JSON body), see `imageShortcutFull.png`.
+## To build the Shortcut
+
+Here’s what the Shortcut's action sequence looks like:
+
+![Screenshot of the ClawPod iOS Shortcut definition](./assets/imageShortcut.png)
 
 
-## To build the Shortcut from scratch
+Here are instructions to build it from scratch. For a fully expanded screenshot of every action (including the HTTP JSON body), see `./assets/imageShortcutFull.png`.
 
-Here are detailed instructions, for how to make it.
+Here are detailed instructions, for how to make it within the Shortcuts app.
 
 ### 1) Create the shortcut
 
@@ -42,6 +48,8 @@ Open Shortcuts → tap **+** → name it something memorable.
 ### 4) Conversation loop
 
 Add **Repeat** → `50 times`.
+
+(50 is arbitrary. It's a crude loop to guarantee completion, in case the agent fails to emit the end of conversation phrase.)
 
 Inside the repeat:
 
@@ -88,24 +96,29 @@ In the shortcut details screen (ⓘ), check **Privacy** settings:
 - Enable **Allow this shortcut to access** for your ClawPod server URL
 
 
-
 ### 5) Run it with Siri
 
-Per Apple’s current Shortcuts docs, you can run a shortcut by asking Siri to run it by name.
-
-- Say: **“Hey Siri, <shortcut name>”**
-
-This works from iPhone/iPad, and also from HomePod (assuming your HomePod/iPhone settings allow it).
-
-Apple reference:
-- https://support.apple.com/guide/shortcuts/run-shortcuts-with-siri-apd07c25bb38/ios
-
-## To setup your HomePod
-
-To use this you need to enable Personal Content and Recognize my Voice. [Apple docs on Siri on HomePod](https://support.apple.com/guide/homepod/set-up-siri-apd1841a8f81/homepod) keep shifting, but here's where I found the settings:
+To use this fro your HomePod you need to enable Personal Content and Recognize my Voice. [Apple docs on Siri on HomePod](https://support.apple.com/guide/homepod/set-up-siri-apd1841a8f81/homepod) keep shifting, but here's where I found the settings:
 
 1. Home app → **…** → **Home Settings**
 2. **People** → your name
 3. Enable **Recognize My Voice**
 4. **Personal Content** → enable for the HomePod(s) you want
+
+Below are screenshots of where these settings live in the Home app:
+
+HomePod settings:
+
+![Home app: HomePod device settings showing Personal Content / related toggles](./assets/imageHomePodSettings.PNG) 
+
+Home Settings:
+
+![Home app: Home Settings → People → Personal Content / Recognize My Voice](./assets/imageHomeSettings.PNG) |
+
+
+Then, per Apple’s current Shortcuts docs, you can run a shortcut by asking Siri to run it by name.
+
+- Say: **“Hey Siri, <shortcut name>”**
+
+In practice I've found one needs to explore variant phrasing and even modify the shortcut name to get Siri to detect it reliably. Sad!
 
