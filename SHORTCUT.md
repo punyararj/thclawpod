@@ -2,19 +2,7 @@
 
 Create the iOS Shortcut that connects HomePod to ClawPod.
 
-This doc is written so you can rebuild the Shortcut from scratch. For a fully expanded screenshot of every action (including the HTTP JSON body), see `imageShortcutFull.png`.
-
-## Prerequisites
-
-- iPhone or iPad with iOS 16+
-- Shortcuts app
-- ClawPod server running and reachable
-
-## Current Shortcut (as shown in `imageShortcutFull.png`)
-
-Name: **Activate the Kraken**
-
-High-level behavior:
+The easiest thing is to import my Shortcut and adjust it. It does the following:
 
 1. Set the ClawPod server base URL into a variable (`chat_server`).
 2. Speak a greeting ("This is Kraken").
@@ -26,7 +14,12 @@ High-level behavior:
 
 Note: the shortcut uses the server’s `end_conversation` field to stop cleanly. After speaking the `reply`, it extracts `end_conversation` from the JSON response and stops the shortcut when it’s truthy.
 
-## Step-by-step (rebuild instructions)
+Here are instructions to build it from scratch. For a fully expanded screenshot of every action (including the HTTP JSON body), see `imageShortcutFull.png`.
+
+
+## To build the Shortcut from scratch
+
+Here are detailed instructions, for how to make it.
 
 ### 1) Create the shortcut
 
@@ -66,7 +59,8 @@ Inside the repeat:
   - Method: POST
   - Request Body: JSON
     - `text`: Ask for Input
-    - `speaker`: `Alexis` (customize this)
+    - `speaker`: `Alexis` (customize this so the agent knows who you
+      are, by knowing which user's Shortcut is running)
 
 #### c) Get response and Speak
 
@@ -85,6 +79,16 @@ Inside the repeat:
 - **If** Dictionary Value is true
   - **Stop This Shortcut**
 
+
+### 4) Set Shortcut privacy settings
+
+In the shortcut details screen (ⓘ), check **Privacy** settings:
+
+- Enable **Allow Running When Locked**
+- Enable **Allow this shortcut to access** for your ClawPod server URL
+
+
+
 ### 5) Run it with Siri
 
 Per Apple’s current Shortcuts docs, you can run a shortcut by asking Siri to run it by name.
@@ -96,33 +100,12 @@ This works from iPhone/iPad, and also from HomePod (assuming your HomePod/iPhone
 Apple reference:
 - https://support.apple.com/guide/shortcuts/run-shortcuts-with-siri-apd07c25bb38/ios
 
-### 6) HomePod setup (Personal Content + voice recognition)
+## To setup your HomePod
 
-Apple’s naming has shifted over time; on current iOS/HomePod versions the relevant setting is typically called **Personal Content** (and it works together with **Recognize My Voice**).
-
-Apple Support reference:
-- https://support.apple.com/guide/homepod/set-up-siri-apd1841a8f81/homepod
-
-Quick path:
+To use this you need to enable Personal Content and Recognize my Voice. [Apple docs on Siri on HomePod](https://support.apple.com/guide/homepod/set-up-siri-apd1841a8f81/homepod) keep shifting, but here's where I found the settings:
 
 1. Home app → **…** → **Home Settings**
 2. **People** → your name
 3. Enable **Recognize My Voice**
 4. **Personal Content** → enable for the HomePod(s) you want
 
-## Shortcut privacy settings
-
-In the shortcut details screen (ⓘ), check **Privacy** settings:
-
-- Enable **Allow Running When Locked**
-- Enable **Allow this shortcut to access** for your ClawPod server URL
-
-## Testing
-
-1. Run the shortcut manually on iPhone first.
-2. Verify server receives requests and responds.
-3. Then test via "Hey Siri, <your shortcut name>" on HomePod.
-
-## Reference screenshot
-
-- Full expanded screenshot: `imageShortcutFull.png`
