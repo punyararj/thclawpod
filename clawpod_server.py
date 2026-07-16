@@ -32,6 +32,8 @@ from fastapi import FastAPI, HTTPException, Request, Depends
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import httpx
+import strip_markdown
+import re
 
 # -----------------------------------------------------------------------------
 # Configuration
@@ -63,6 +65,7 @@ END_PHRASES = [
     "จบ",
     "แค่นี้แหละ",
     "ขอบคุณนะ",
+    "ขอบใจ",
     "ยินดีให้บริการครับ"
 ]
 
@@ -85,6 +88,24 @@ def set_user_session(speaker: str, session_id: str) -> None:
     with open("user_session.json", "w") as f:
         json.dump(user_session, f)
 
+
+def strip_markdown_and_emoji(text: str) -> str:
+    # 1. Strip Markdown formatting (bold, headers, links, etc.)
+    text = strip_markdown.strip_markdown(text)
+
+    # 2. Regex to remove all Unicode emojis and symbols
+    # Matches all characters outside the Basic Multilingual Plane (BMP)
+    emoji_pattern = re.compile(
+        u'([\U00002600-\U000027BF])|'
+        u'([\U0001f300-\U0001f64F])|'
+        u'([\U0001f680-\U0001f6FF])|'
+        u'([\U0001f1e6-\U0001f1ff])|'
+        u'([\U0001f900-\U0001f9ff])',
+        flags=re.UNICODE
+    )
+
+    # Remove emojis and strip any extra leading/trailing whitespace
+    return emoji_pattern.sub(r'', text).strip()
 
 app = FastAPI(title="THClawpod", version="1.0.0")
 
@@ -179,6 +200,7 @@ async def call_openclaw(message: str, session_id: str, speaker: str) -> str:
             if response.status_code == 200:
                 response_json = response.json()
                 response_text = response_json["summary"]
+                response_text = strip_markdown_and_emoji(response_text)
                 response_session_id = response_json["session_id"]
                 set_user_session(speaker, response_session_id)
                 return response_text
