@@ -61,7 +61,9 @@ END_PHRASES = [
     "bye for now",
     "แค่นี้นะ",
     "จบ",
-    "แค่นี้แหละ"
+    "แค่นี้แหละ",
+    "ขอบคุณนะ",
+    "ยินดีให้บริการครับ"
 ]
 
 # Logging
@@ -227,10 +229,11 @@ async def chat(request: ChatRequest, _: None = Depends(require_auth)):
     
     # Get session and call Clawdbot
     session_id = get_session_id(speaker)
+
     reply = await call_openclaw(text, session_id, speaker)
-    
+    end_conversation = is_end_phrase(text)
     # Check if agent wants to end conversation
-    end_conversation = is_end_phrase(reply)
+
     
     logger.info(f"Response: end={end_conversation} reply={reply[:50]}...")
     
