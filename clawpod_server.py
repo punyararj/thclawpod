@@ -187,7 +187,7 @@ async def call_openclaw(message: str, session_id: str, speaker: str) -> str:
         payload = {
             "prompt": message,
             "model": "gemini-2.5-flash",
-            "system": "You are a woman artificial intelligence assistant named มะนาว",
+            "system": "You are a woman artificial intelligence assistant named มะนาว.",
             "workspace_dir": "/workspace/",
             "stream": False,
             "temperature": 0.7,
