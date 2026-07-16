@@ -1,5 +1,6 @@
-# ClawPod
+# THClawPod
 
+This repo is fork from ClawPod.
 Talk to OpenClaw through Apple HomePod. ClawPod bridges HomePod’s voice interface to [OpenClaw](https://openclaw.ai/), letting you have conversations with your AI assistant through any HomePod in your home.
 
 To use it, run `uv run clawpod.py` on a machine where you already run `openclaw`. You can test it with `test_client.py`. Import the shortcut file onto your iOS device, to activate it from a HomePod.

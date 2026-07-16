@@ -1,0 +1,16 @@
+.git
+.gitignore
+.idea
+.venv
+__pycache__
+*.pyc
+assets
+*.shortcut
+README.md
+SHORTCUT.md
+TODO.md
+test_client.py
+user_session.json
+docker-compose.yml
+Dockerfile
+.env

@@ -31,6 +31,7 @@ from datetime import datetime
 from fastapi import FastAPI, HTTPException, Request, Depends
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+import httpx
 
 # -----------------------------------------------------------------------------
 # Configuration
@@ -40,10 +41,13 @@ HOST = os.getenv("CLAWPOD_HOST", "0.0.0.0")
 PORT = int(os.getenv("CLAWPOD_PORT", "7001"))
 LOG_LEVEL = os.getenv("CLAWPOD_LOG_LEVEL", "INFO")
 API_TOKEN = os.getenv("CLAWPOD_API_TOKEN")  # Optional auth
+TH_CLAW_TOKEN = os.getenv("TH_CLAW_TOKEN")
+TH_CLAW_URL = os.getenv("TH_CLAW_URL")
 
 # Clawdbot settings
 CLAWDBOT_AGENT = os.getenv("CLAWPOD_AGENT", "main")
 CLAWDBOT_TIMEOUT = int(os.getenv("CLAWPOD_TIMEOUT", "60"))
+TH_CLAW_HOME = os.getenv("TH_CLAW_HOME",".")
 
 # Session prefix for HomePod conversations
 SESSION_PREFIX = os.getenv("CLAWPOD_SESSION_PREFIX", "homepod")
@@ -55,13 +59,32 @@ END_PHRASES = [
     "thats all",  # smart apostrophe variant
     "end conversation",
     "bye for now",
+    "แค่นี้นะ",
+    "จบ",
+    "แค่นี้แหละ"
 ]
 
 # Logging
 logging.basicConfig(level=LOG_LEVEL.upper())
-logger = logging.getLogger("clawpod")
+logger = logging.getLogger("thclawpod")
+user_session:dict[str, str] = {}
+if os.path.exists("user_session.json"):
+    with open("user_session.json") as f:
+        user_session = json.load(f)
 
-app = FastAPI(title="Clawpod", version="1.0.0")
+if os.path.exists(f'{TH_CLAW_HOME.rstrip("/")}/.thclaws/sessions'):
+    for sess in user_session:
+        sess_key = user_session[sess]
+        if not os.path.exists(sess_key):
+            del user_session[sess]
+
+def set_user_session(speaker: str, session_id: str) -> None:
+    user_session[speaker] = session_id
+    with open("user_session.json", "w") as f:
+        json.dump(user_session, f)
+
+
+app = FastAPI(title="THClawpod", version="1.0.0")
 
 # -----------------------------------------------------------------------------
 # Models
@@ -77,6 +100,14 @@ class ChatResponse(BaseModel):
     """Response back to iOS Shortcut."""
     reply: str
     end_conversation: bool = False
+
+class THClawAgentRequest(BaseModel):
+    """Request to THClawbot agent."""
+    prompt: str
+    model: str
+    session_id: str
+    workspace_dir: str
+    stream: bool
 
 
 # -----------------------------------------------------------------------------
@@ -96,7 +127,7 @@ def require_auth(request: Request) -> None:
 # Clawdbot Integration
 # -----------------------------------------------------------------------------
 
-def get_session_id(speaker: str) -> str:
+def get_session_id(speaker: str) -> str|None:
     """
     Derive session ID from speaker name.
     
@@ -107,30 +138,10 @@ def get_session_id(speaker: str) -> str:
     speaker_key = speaker.lower().strip().replace(" ", "-")
     if not speaker_key or speaker_key == "unknown":
         speaker_key = "family"
-    return f"{SESSION_PREFIX}:{speaker_key}"
+    if speaker_key in user_session:
+        return user_session[speaker_key]
+    return None
 
-
-def find_openclaw() -> str:
-    """Find the openclaw CLI, preferring volta-managed version."""
-    # Try volta path first
-    volta_path = os.path.expanduser("~/.volta/bin/openclaw")
-    if os.path.exists(volta_path):
-        return volta_path
-    
-    # Try npm-global
-    npm_path = os.path.expanduser("~/.npm-global/bin/openclaw")
-    if os.path.exists(npm_path):
-        return npm_path
-    
-    # Fall back to PATH
-    path = shutil.which("openclaw")
-    if path:
-        return path
-    
-    raise RuntimeError("openclaw not found in volta, npm-global, or PATH")
-
-
-HOMEPOD_STYLE_PREFIX = "[HomePod voice mode; be brief; no emojis] "
 
 
 async def call_openclaw(message: str, session_id: str, speaker: str) -> str:
@@ -145,67 +156,36 @@ async def call_openclaw(message: str, session_id: str, speaker: str) -> str:
     Returns:
         Agent's response text
     """
-    openclaw = find_openclaw()
-    
-    # Prepend voice-mode + speaker context to message
-    contextualized_message = f"{HOMEPOD_STYLE_PREFIX}[speaker: {speaker}] {message}"
-    
-    cmd = [
-        openclaw,
-        "agent",
-        "--message", contextualized_message,
-        "--session-id", session_id,
-        "--agent", CLAWDBOT_AGENT,
-        "--timeout", str(CLAWDBOT_TIMEOUT),
-        "--json",
-    ]
-    
-    logger.info(f"Calling openclaw: session={session_id} speaker={speaker}")
-    logger.debug(f"Command: {' '.join(cmd)}")
-    
-    # Set up environment with volta
-    env = os.environ.copy()
-    volta_home = os.path.expanduser("~/.volta")
-    env["VOLTA_HOME"] = volta_home
-    env["PATH"] = f"{volta_home}/bin:" + env.get("PATH", "")
-    
-    try:
-        proc = await asyncio.create_subprocess_exec(
-            *cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            env=env,
-        )
-        stdout, stderr = await asyncio.wait_for(
-            proc.communicate(),
-            timeout=CLAWDBOT_TIMEOUT + 10
-        )
-        
-        if proc.returncode != 0:
-            logger.error(f"openclaw error (exit {proc.returncode}): {stderr.decode()}")
-            return "Sorry, I'm having trouble connecting right now. Try again in a moment."
-        
-        # Parse JSON response
-        # openclaw --json returns: {"result": {"payloads": [{"text": "..."}]}}
-        result = json.loads(stdout.decode())
-        payloads = result.get("result", {}).get("payloads", [])
-        reply = payloads[0].get("text", "") if payloads else ""
-        
-        if not reply:
-            logger.warning(f"Empty reply from openclaw: {result}")
-            return "I'm not sure how to respond to that."
-            
-        return reply.strip()
-        
-    except asyncio.TimeoutError:
-        logger.error("openclaw timed out")
-        return "Sorry, that took too long. Try again?"
-    except json.JSONDecodeError as e:
-        logger.error(f"Failed to parse openclaw response: {e}")
-        return "Sorry, something went wrong."
-    except Exception as e:
-        logger.error(f"openclaw call failed: {e}")
-        return "Sorry, I couldn't process that request."
+    async with httpx.AsyncClient() as client:
+        session_id = get_session_id(speaker)
+        headers = {'Content-Type': 'application/json'}
+        if TH_CLAW_TOKEN:
+            headers.update({"Authorization": f"Bearer {TH_CLAW_TOKEN}"})
+        payload = {
+            "prompt": message,
+            "model": "gemini-2.5-flash",
+            "workspace_dir": "/workspace/",
+            "stream": False,
+            "temperature": 0.7,
+            "max_tokens": 4096,
+        }
+        if session_id:
+            payload["session_id"] = session_id
+        url = f'{TH_CLAW_URL}/agent/run'
+        try:
+            response = await client.post(url, headers=headers, json=payload, timeout=CLAWDBOT_TIMEOUT)
+            if response.status_code == 200:
+                response_json = response.json()
+                response_text = response_json["summary"]
+                response_session_id = response_json["session_id"]
+                set_user_session(speaker, response_session_id)
+                return response_text
+            else:
+                logger.error(f"Server return {response.status_code}")
+                return "การประมวลผลผิดพลาดต้องการลองใหม่ไหมคะ"
+        except httpx.TimeoutException:
+            logger.error("openclaw timed out")
+            return "การประมวลผลใช้เวลานานเกินไป ลองใหม่ไหมคะ"
 
 
 def is_end_phrase(text: str) -> bool:

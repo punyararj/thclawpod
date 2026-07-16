@@ -1,0 +1,24 @@
+services:
+  clawpod:
+    build: .
+    container_name: thclawpod
+    restart: unless-stopped
+    ports:
+      - "${CLAWPOD_PORT:-7001}:7001"
+    environment:
+      CLAWPOD_HOST: 0.0.0.0
+      CLAWPOD_PORT: 7001
+      CLAWPOD_LOG_LEVEL: ${CLAWPOD_LOG_LEVEL:-INFO}
+      CLAWPOD_API_TOKEN: ${CLAWPOD_API_TOKEN:-}
+      TH_CLAW_URL: ${TH_CLAW_URL:?TH_CLAW_URL is required (e.g. http://host:port)}
+      TH_CLAW_TOKEN: ${TH_CLAW_TOKEN:-}
+      TH_CLAW_HOME: ${TH_CLAW_HOME:-.}
+      CLAWPOD_AGENT: ${CLAWPOD_AGENT:-main}
+      CLAWPOD_TIMEOUT: ${CLAWPOD_TIMEOUT:-60}
+      CLAWPOD_SESSION_PREFIX: ${CLAWPOD_SESSION_PREFIX:-homepod}
+    volumes:
+      # Persist user_session.json across container restarts
+      - clawpod-data:/data
+
+volumes:
+  clawpod-data:
