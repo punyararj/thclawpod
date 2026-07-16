@@ -187,6 +187,7 @@ async def call_openclaw(message: str, session_id: str, speaker: str) -> str:
         payload = {
             "prompt": message,
             "model": "gemini-2.5-flash",
+            "system": "You are a woman artificial intelligence assistant named มะนาว",
             "workspace_dir": "/workspace/",
             "stream": False,
             "temperature": 0.7,
@@ -194,6 +195,7 @@ async def call_openclaw(message: str, session_id: str, speaker: str) -> str:
         }
         if session_id:
             payload["session_id"] = session_id
+
         url = f'{TH_CLAW_URL}/agent/run'
         try:
             response = await client.post(url, headers=headers, json=payload, timeout=CLAWDBOT_TIMEOUT)
